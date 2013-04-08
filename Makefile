@@ -1,4 +1,6 @@
 CFLAGS += -I include -g
+LDFLAGS += -g
+LDLIBS += -lm
 PROGRAMS = cclient cserver
 MODULES = lib $(PROGRAMS)
 

@@ -58,7 +58,6 @@ int listen_to(int port)
 
 	opt = 1;
 	setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(int));
-	setsockopt(fd, SOL_SOCKET, SO_REUSEPORT, &opt, sizeof(int));
 	opt = 0;
 	setsockopt(fd, SOL_SOCKET, SO_LINGER, &opt, sizeof(int));
 

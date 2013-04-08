@@ -38,7 +38,8 @@ int main(void)
 
 	wait_fds = rfds;
 	while (select(max_fd + 1, &wait_fds, NULL, NULL, NULL) > 0) {
-		for (int fd = 0; fd < max_fd + 1; fd++) {
+		int fd;
+		for (fd = 0; fd < max_fd + 1; fd++) {
 			if (!FD_ISSET(fd, &wait_fds))
 				continue;
 
