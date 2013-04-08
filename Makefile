@@ -1,4 +1,4 @@
-CFLAGS += -I include -g
+CFLAGS += -I include -g -Wall -Werror -pedantic
 LDFLAGS += -g
 LDLIBS += -lm
 PROGRAMS = cclient cserver
