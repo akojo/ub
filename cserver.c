@@ -33,8 +33,8 @@ int main(void)
 	FD_ZERO(&rfds);
 	FD_SET(listen_fd, &rfds);
 
-	nicks = array_new(free);
-	clients = array_new(NULL);
+	nicks = array_new();
+	clients = array_new();
 
 	wait_fds = rfds;
 	while (select(max_fd + 1, &wait_fds, NULL, NULL, NULL) > 0) {

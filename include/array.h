@@ -9,7 +9,7 @@ struct array {
 
 typedef struct array array_t;
 
-array_t *array_new(void (*free)(void *));
+array_t *array_new();
 void array_ensure(array_t *array, int size);
 
 void *array_get(array_t *array, int index);
