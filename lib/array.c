@@ -45,6 +45,6 @@ void array_push(array_t *a, void *value)
 void array_foreach_idx(array_t *a, void (*func)(void *, int, void *), void *ctx)
 {
 	int i;
-	for (int i = 0; i < a->free; i++)
+	for (i = 0; i < a->free; i++)
 		func(a->entries[i], i, ctx);
 }
