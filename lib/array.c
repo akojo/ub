@@ -19,7 +19,7 @@ void array_ensure(array_t *a, int size)
 	if (a->size < size) {
 		while (a->size < size)
 			a->size *= 2;
-		a->entries = realloc(a->entries, a->size * sizeof(void));
+		a->entries = realloc(a->entries, a->size * sizeof(void *));
 		memset(a->entries + a->free, 0, a->size - a->free);
 	}
 }
