@@ -7,7 +7,7 @@
 
 array_t *array_new()
 {
-	array_t *new = calloc(1, sizeof(struct array));
+	array_t *new = calloc(1, sizeof(array_t));
 	new->size = DEFAULT_SIZE;
 	new->free = 0;
 	new->entries = calloc(new->size, sizeof(void *));
