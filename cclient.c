@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 #include "client.h"
 #include "common.h"
@@ -32,6 +33,11 @@ int main(void)
 ssize_t process_input(char *str)
 {
 	char *response;
+	int len = strlen(str);
+	while (isspace(str[len - 1])) {
+		str[len - 1] = '\0';
+		len--;
+	}
 
     if (str[0] == '/')
         response = handle_cmd(str + 1);
