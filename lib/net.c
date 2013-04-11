@@ -13,31 +13,6 @@
 #include <netinet/in.h>
 #include <netdb.h>
 
-int connect_to(char *hostname, int port)
-{
-	int status;
-	int fd;
-	char portstr[32];
-	struct addrinfo hint;
-	struct addrinfo *info;
-
-	hint.ai_family = PF_INET;
-	hint.ai_socktype = SOCK_STREAM;
-
-	sprintf(portstr, "%d", port);
-
-	status = getaddrinfo(hostname, portstr, &hint, &info); 
-	if (status < 0) error("failed to get address");
-
-	fd = socket(PF_INET, SOCK_STREAM, 0);
-	if (fd < 0) error("failed to create socket");
-
-	status = connect(fd, info->ai_addr, info->ai_addrlen);
-	if (status < 0) error("failed to connect to server");
-
-	return fd;
-}
-
 int listen_to(int port)
 {
 	int fd = socket(PF_INET, SOCK_STREAM, 0);
