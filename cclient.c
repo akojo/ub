@@ -50,8 +50,13 @@ ssize_t process_response(char *str)
 	static char result[BUFSIZ];
 
 	int len;
-	cJSON *json = cJSON_Parse(str);
-	cJSON *response = cJSON_GetObjectItem(json, "response");
+	cJSON *json;
+	cJSON *response;
+
+	json = cJSON_Parse(str);
+	if (!json)
+		return;
+	response = cJSON_GetObjectItem(json, "response");
 
 	if (!strcmp(response->valuestring, NICK_STR)) {
 		cJSON *nick = cJSON_GetObjectItem(json, "nick");
