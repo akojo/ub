@@ -8,7 +8,7 @@ void error(char *fmt, ...)
 {
 	va_list ap;
 	va_start(ap, fmt);
-	vsprintf(buf, fmt, ap);
+	vsnprintf(buf, BUFSIZ, fmt, ap);
 	va_end(ap);
 
 	perror(buf);
