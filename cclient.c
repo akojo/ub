@@ -12,8 +12,8 @@
 static int term_fd = 0;
 static int srv_fd;
 
-void process_response(char *str);
-void process_input(char *str);
+ssize_t process_response(char *str);
+ssize_t process_input(char *str);
 
 char *handle_cmd();
 char *handle_message();
@@ -29,7 +29,7 @@ int main(void)
 	quit("bye");
 }
 
-void process_input(char *str)
+ssize_t process_input(char *str)
 {
 	char *response;
 
@@ -42,9 +42,10 @@ void process_input(char *str)
 		write(srv_fd, response, strlen(response));
 		free(response);
 	}
+    return strlen(str);
 }
 
-void process_response(char *str)
+ssize_t process_response(char *str)
 {
 	int len;
 	static char result[1024];
@@ -67,6 +68,7 @@ void process_response(char *str)
 		write(term_fd, result, len);
 
 	cJSON_Delete(json);
+    return strlen(str);
 }
 
 char *handle_cmd(char *cmd)

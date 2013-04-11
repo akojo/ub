@@ -32,7 +32,7 @@ client_t *client_new()
 	return new_cl;
 }
 
-int client_connect(client_t *cl, char *hostname, int port, void (*handler)(char *))
+int client_connect(client_t *cl, char *hostname, int port, handler_t handler)
 {
 	int fd = connect_to(hostname, port);
 
@@ -53,7 +53,7 @@ void client_delete(client_t *cl)
 	free(cl);
 }
 
-int client_add_readfd(client_t *cl, int fd, void (*handler)(char *))
+int client_add_readfd(client_t *cl, int fd, handler_t handler)
 {
 	array_ensure(cl->handlers, fd);
 	array_set(cl->handlers, fd, (void *)handler);
@@ -74,7 +74,7 @@ void client_run(client_t *cl)
 		int fd;
 
 		for (fd = 0; fd < cl->maxfd + 1; fd++) {
-			void (*handler)(char *) = (void (*)(char *))array_get(cl->handlers, fd);
+            handler_t handler = (handler_t)array_get(cl->handlers, fd);
 			if (FD_ISSET(fd, &read_fds) && handler) {
 				int n;
 				char *p;
