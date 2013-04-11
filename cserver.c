@@ -174,6 +174,8 @@ char *handle_nick(int fd, cJSON *json)
 void write_message(void *val, int fd, void *context)
 {
 	char *message = context;
-	if (val)
+	if (val) {
 		write(fd, message, strlen(message));
+		write(fd, "\n", 1);
+	}
 }
