@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <sys/errno.h>
+
 static char buf[BUFSIZ];
 
 void error(char *fmt, ...)
@@ -11,7 +13,11 @@ void error(char *fmt, ...)
 	vsnprintf(buf, BUFSIZ, fmt, ap);
 	va_end(ap);
 
-	perror(buf);
+	if (errno)
+		perror(buf);
+	else
+		fprintf(stderr, "%s\n", buf);
+
 	exit(1);
 }
 
