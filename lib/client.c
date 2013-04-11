@@ -81,17 +81,12 @@ void client_run(client_t *cl)
             handler_t handler = (handler_t)array_get(cl->handlers, fd);
 			if (FD_ISSET(fd, &read_fds) && handler) {
 				int n;
-				char *p;
 
                 n = read(fd, cl->buf, cl->bufsize - 1);
 				if (n == 0) return;
 				else if (n < 0) error("failed to read descriptor");
 
-                if ((p = strpbrk(cl->buf, "\n\r")))
-					*p = '\0';
-				else
-                    cl->buf[n] = '\0';
-
+				cl->buf[n] = '\0';
                 handler(cl->buf);
 			}
 		}
