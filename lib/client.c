@@ -21,6 +21,8 @@ struct client {
 	fd_set read_fds;
 	int maxfd;
 	array_t *handlers;
+    size_t bufsize;
+    char *buf;
 };
 
 static int connect_to(char *hostname, int port);
@@ -29,6 +31,8 @@ client_t *client_new()
 {
 	client_t *new_cl = calloc(1, sizeof(client_t));
 	new_cl->handlers = array_new();
+    new_cl->bufsize = BUFSIZ;
+    new_cl->buf = malloc(new_cl->bufsize);
 	return new_cl;
 }
 
@@ -49,6 +53,7 @@ int client_connect(client_t *cl, char *hostname, int port, handler_t handler)
 
 void client_delete(client_t *cl)
 {
+    free(cl->buf);
     array_delete(cl->handlers);
 	free(cl);
 }
@@ -67,7 +72,6 @@ int client_add_readfd(client_t *cl, int fd, handler_t handler)
 
 void client_run(client_t *cl)
 {
-	static char buf[BUFSIZ];
 	fd_set read_fds = cl->read_fds;
 
 	while (select(cl->maxfd + 1, &read_fds, NULL, NULL, NULL) > 0) {
@@ -79,16 +83,16 @@ void client_run(client_t *cl)
 				int n;
 				char *p;
 
-				n = read(fd, buf, BUFSIZ);
+                n = read(fd, cl->buf, cl->bufsize - 1);
 				if (n == 0) return;
 				else if (n < 0) error("failed to read descriptor");
 
-				if ((p = strpbrk(buf, "\n\r")))
+                if ((p = strpbrk(cl->buf, "\n\r")))
 					*p = '\0';
 				else
-					buf[n] = '\0';
+                    cl->buf[n] = '\0';
 
-				handler(buf);
+                handler(cl->buf);
 			}
 		}
 		read_fds = cl->read_fds;
