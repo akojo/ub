@@ -107,13 +107,14 @@ static int connect_to(char *hostname, int port)
 	struct addrinfo hint;
 	struct addrinfo *info;
 
+	memset(&hint, 0, sizeof(struct addrinfo));
 	hint.ai_family = PF_INET;
 	hint.ai_socktype = SOCK_STREAM;
 
 	sprintf(portstr, "%d", port);
 
 	status = getaddrinfo(hostname, portstr, &hint, &info); 
-	if (status < 0) error("failed to get address");
+	if (status != 0) error("failed to get address: %s", gai_strerror(status));
 
 	fd = socket(PF_INET, SOCK_STREAM, 0);
 	if (fd < 0) error("failed to create socket");
