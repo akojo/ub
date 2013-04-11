@@ -49,7 +49,7 @@ int client_connect(client_t *cl, char *hostname, int port, void (*handler)(char 
 
 void client_delete(client_t *cl)
 {
-	free(cl->handlers);
+    array_delete(cl->handlers);
 	free(cl);
 }
 

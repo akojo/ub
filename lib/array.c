@@ -14,6 +14,12 @@ array_t *array_new()
 	return new;
 }
 
+void array_delete(array_t *array)
+{
+    free(array->entries);
+    free(array);
+}
+
 void array_ensure(array_t *a, int size)
 {
 	if (a->size < size) {
