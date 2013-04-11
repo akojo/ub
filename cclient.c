@@ -47,24 +47,30 @@ ssize_t process_input(char *str)
 
 ssize_t process_response(char *str)
 {
+	static char result[BUFSIZ];
+
 	int len;
-	static char result[1024];
 	cJSON *json = cJSON_Parse(str);
 	cJSON *response = cJSON_GetObjectItem(json, "response");
 
 	if (!strcmp(response->valuestring, NICK_STR)) {
 		cJSON *nick = cJSON_GetObjectItem(json, "nick");
 		cJSON *prev = cJSON_GetObjectItem(json, "prev_nick");
-		snprintf(result, 1024, "* '%s' is now known as '%s'\n", prev->valuestring, nick->valuestring);
+
+		len = snprintf(result, BUFSIZ, "* '%s' is now known as '%s'\n",
+					   prev->valuestring, nick->valuestring);
 	} else if (!strcmp(response->valuestring, MSG_STR)) {
 		cJSON *nick = cJSON_GetObjectItem(json, "nick");
 		cJSON *msg = cJSON_GetObjectItem(json, "message");
-		snprintf(result, 1024, "<%s> %s\n", nick->valuestring, msg->valuestring);
+
+		len = snprintf(result, BUFSIZ, "<%s> %s\n",
+					   nick->valuestring, msg->valuestring);
 	} else {
 		result[0] = '\0';
+		len = 0;
 	}
 
-	if ((len = strlen(result)) > 0)
+	if (len > 0)
 		write(term_fd, result, len);
 
 	cJSON_Delete(json);
