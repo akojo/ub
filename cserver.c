@@ -92,9 +92,9 @@ char *process_message(int fd, char *msg)
 		return NULL;
 	}
 
-	cmd = cJSON_GetObjectItem(json, "cmd");
+	cmd = cJSON_GetObjectItem(json, "msgType");
 	if (!cmd || cmd->type != cJSON_String) {
-		warning("missing 'cmd' from message '%s'\n", msg);
+		warning("missing 'msgType' from message '%s'\n", msg);
 		goto finish;
 	}
 
@@ -117,17 +117,21 @@ char *handle_message(int fd, cJSON *json)
 	cJSON *response = cJSON_CreateObject();
 
 	if (!nick) {
-		cJSON_AddStringToObject(response, "response", ERROR_STR);
-		cJSON_AddStringToObject(response, "message", "not registered");
+		cJSON_AddStringToObject(response, "msgType", ERROR_STR);
+		cJSON_AddStringToObject(response, "data", "not registered");
 	} else {
-		cJSON *message = cJSON_GetObjectItem(json, "message");
+		cJSON *message = cJSON_GetObjectItem(json, "data");
 		if (!message) {
 			warning("missing 'message'\n");
 			goto finish;
 		}
-		cJSON_AddStringToObject(response, "response", MSG_STR);
-		cJSON_AddStringToObject(response, "nick", nick);
-		cJSON_AddStringToObject(response, "message", message->valuestring);
+		cJSON_AddStringToObject(response, "msgType", MSG_STR);
+
+		cJSON *data = cJSON_CreateObject();
+		cJSON_AddStringToObject(data, "nick", nick);
+		cJSON_AddStringToObject(data, "message", message->valuestring);
+
+		cJSON_AddItemToObject(response, "data", data);
 	}
 
 	output = cJSON_PrintUnformatted(response);
@@ -142,7 +146,7 @@ char *handle_nick(int fd, cJSON *json)
 {
 	char *old;
 	char *output;
-	cJSON *nick = cJSON_GetObjectItem(json, "nick");
+	cJSON *nick = cJSON_GetObjectItem(json, "data");
 	cJSON *response;
 
 	if (!nick || nick->type != cJSON_String) {
@@ -159,14 +163,19 @@ char *handle_nick(int fd, cJSON *json)
 		return NULL;
 
 	response = cJSON_CreateObject();
-	cJSON_AddStringToObject(response, "response", NICK_STR);
-	cJSON_AddStringToObject(response, "nick", nick->valuestring);
-	cJSON_AddStringToObject(response, "prev_nick", old);
+	cJSON_AddStringToObject(response, "msgType", NICK_STR);
+
+	cJSON *data = cJSON_CreateObject();
+	cJSON_AddStringToObject(data, "nick", nick->valuestring);
+	cJSON_AddStringToObject(data, "prev_nick", old);
+
+	cJSON_AddItemToObject(response, "data", data);
 
 	output = cJSON_PrintUnformatted(response);
 
 	free(old);
 	cJSON_Delete(response);
+
 	return output;
 
 }

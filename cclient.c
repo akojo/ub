@@ -83,17 +83,18 @@ void handle_response(cJSON *json)
 	static char result[BUFSIZ];
 
 	int len;
-	cJSON *response = cJSON_GetObjectItem(json, "response");
+	cJSON *type = cJSON_GetObjectItem(json, "msgType");
+	cJSON *data = cJSON_GetObjectItem(json, "data");
 
-	if (!strcmp(response->valuestring, NICK_STR)) {
-		cJSON *nick = cJSON_GetObjectItem(json, "nick");
-		cJSON *prev = cJSON_GetObjectItem(json, "prev_nick");
+	if (!strcmp(type->valuestring, NICK_STR)) {
+		cJSON *nick = cJSON_GetObjectItem(data, "nick");
+		cJSON *prev = cJSON_GetObjectItem(data, "prev_nick");
 
 		len = snprintf(result, BUFSIZ, "* '%s' is now known as '%s'\n",
 					   prev->valuestring, nick->valuestring);
-	} else if (!strcmp(response->valuestring, MSG_STR)) {
-		cJSON *nick = cJSON_GetObjectItem(json, "nick");
-		cJSON *msg = cJSON_GetObjectItem(json, "message");
+	} else if (!strcmp(type->valuestring, MSG_STR)) {
+		cJSON *nick = cJSON_GetObjectItem(data, "nick");
+		cJSON *msg = cJSON_GetObjectItem(data, "message");
 
 		len = snprintf(result, BUFSIZ, "<%s> %s\n",
 					   nick->valuestring, msg->valuestring);
@@ -116,8 +117,8 @@ char *handle_cmd(char *cmd)
 
     json = cJSON_CreateObject();
 	if (!strcmp(cmd, "nick")) {
-		cJSON_AddStringToObject(json, "cmd", NICK_STR);
-		cJSON_AddStringToObject(json, "nick", args);
+		cJSON_AddStringToObject(json, "msgType", NICK_STR);
+		cJSON_AddStringToObject(json, "data", args);
     } else {
         output = NULL;
         goto finish;
@@ -138,9 +139,8 @@ char *handle_message(char *msg)
         return NULL;
    
     json = cJSON_CreateObject();
-
-    cJSON_AddStringToObject(json, "cmd", MSG_STR);
-    cJSON_AddStringToObject(json, "message", msg);
+    cJSON_AddStringToObject(json, "msgType", MSG_STR);
+    cJSON_AddStringToObject(json, "data", msg);
 
     output = cJSON_PrintUnformatted(json);
     cJSON_Delete(json);
