@@ -6,7 +6,7 @@
 struct client;
 typedef struct client client_t;
 
-typedef ssize_t (*handler_t)(char *);
+typedef void (*handler_t)(char *);
 
 client_t *client_new(void);
 int client_connect(client_t *client, char *hostname, int port, handler_t handler);
