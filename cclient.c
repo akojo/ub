@@ -16,12 +16,12 @@ typedef struct {
 	char *(*handler)(cJSON *);
 } cmd_t;
 
-void process_response(char *str);
-void process_input(char *str);
+void process_term_input(char *str);
 
-void handle_response(cJSON *json);
 char *handle_cmd();
 char *handle_message();
+
+void process_server_message(char *str);
 
 char *cmd_msg(cJSON *data);
 char *cmd_nick(cJSON *data);
@@ -43,15 +43,15 @@ int main(void)
 	client_t *client = client_new();
 
 	sbuf = strbuf_new();
-	srv_fd = client_connect(client, "localhost", CHAT_PORT, process_response);
-	client_add_readfd(client, term_fd, process_input);
+	srv_fd = client_connect(client, "localhost", CHAT_PORT, process_server_message);
+	client_add_readfd(client, term_fd, process_term_input);
 	client_run(client);
 
 	client_delete(client);
 	quit("bye");
 }
 
-void process_input(char *str)
+void process_term_input(char *str)
 {
 	char *response;
 	int len = strlen(str);
@@ -69,84 +69,6 @@ void process_input(char *str)
 		write(srv_fd, response, strlen(response));
 		free(response);
 	}
-}
-
-void process_response(char *str)
-{
-	char *s = str;
-	for (;;) {
-		cJSON *json;
-
-		while (*s != '\n' && *s != '\0')
-			strbuf_append(sbuf, *s++);
-
-		if (*s == '\0')
-			return;
-
-		json = cJSON_Parse(strbuf_buffer(sbuf));
-		if (!json)
-			return;
-
-		handle_response(json);
-
-		cJSON_Delete(json);
-		strbuf_reset(sbuf);
-	}
-}
-
-void handle_response(cJSON *json)
-{
-	int i;
-	char *result = NULL;
-
-	cJSON *type = cJSON_GetObjectItem(json, "msgType");
-	cJSON *data = cJSON_GetObjectItem(json, "data");
-
-	for (i = 0; i < ncmds; i++) {
-		if (!strcmp(type->valuestring, cmd_handlers[i].msg_type)) {
-			result = cmd_handlers[i].handler(data);
-		}
-	}
-
-	if (result) {
-		write(term_fd, result, strlen(result));
-		free(result);
-	}
-}
-
-char *cmd_msg(cJSON *data)
-{
-	char *result = malloc(BUFSIZ);
-
-	cJSON *nick = cJSON_GetObjectItem(data, "nick");
-	cJSON *msg = cJSON_GetObjectItem(data, "message");
-
-	snprintf(result, BUFSIZ, "<%s> %s\n",
-			 nick->valuestring, msg->valuestring);
-
-	return result;
-}
-
-char *cmd_nick(cJSON *data)
-{
-	char *result = malloc(BUFSIZ);
-
-	cJSON *nick = cJSON_GetObjectItem(data, "nick");
-	cJSON *prev = cJSON_GetObjectItem(data, "prev_nick");
-
-	snprintf(result, BUFSIZ, "* '%s' is now known as '%s'\n",
-			 prev->valuestring, nick->valuestring);
-
-	return result;
-}
-
-char *cmd_error(cJSON *data)
-{
-	char *message = cJSON_PrintUnformatted(data);
-	warning("error: '%s'", message);
-	free(message);
-
-	return NULL;
 }
 
 char *handle_cmd(char *cmd)
@@ -187,4 +109,77 @@ char *handle_message(char *msg)
     output = cJSON_PrintUnformatted(json);
     cJSON_Delete(json);
     return output;
+}
+
+void process_server_message(char *str)
+{
+	char *s = str;
+
+	for (;;) {
+		int i;
+		cJSON *json, *type;
+
+		while (*s != '\n' && *s != '\0')
+			strbuf_append(sbuf, *s++);
+
+		if (*s == '\0')
+			return;
+
+		json = cJSON_Parse(strbuf_buffer(sbuf));
+		if (!json)
+			return;
+
+		type = cJSON_GetObjectItem(json, "msgType");
+		for (i = 0; i < ncmds; i++) {
+			if (!strcmp(type->valuestring, cmd_handlers[i].msg_type)) {
+				cJSON *data = cJSON_GetObjectItem(json, "data");
+				char *result = cmd_handlers[i].handler(data);
+
+				if (result) {
+					write(term_fd, result, strlen(result));
+					free(result);
+				}
+
+				break;
+			}
+		}
+
+		cJSON_Delete(json);
+		strbuf_reset(sbuf);
+	}
+}
+
+char *cmd_msg(cJSON *data)
+{
+	char *result = malloc(BUFSIZ);
+
+	cJSON *nick = cJSON_GetObjectItem(data, "nick");
+	cJSON *msg = cJSON_GetObjectItem(data, "message");
+
+	snprintf(result, BUFSIZ, "<%s> %s\n",
+			 nick->valuestring, msg->valuestring);
+
+	return result;
+}
+
+char *cmd_nick(cJSON *data)
+{
+	char *result = malloc(BUFSIZ);
+
+	cJSON *nick = cJSON_GetObjectItem(data, "nick");
+	cJSON *prev = cJSON_GetObjectItem(data, "prev_nick");
+
+	snprintf(result, BUFSIZ, "* '%s' is now known as '%s'\n",
+			 prev->valuestring, nick->valuestring);
+
+	return result;
+}
+
+char *cmd_error(cJSON *data)
+{
+	char *message = cJSON_PrintUnformatted(data);
+	warning("error: '%s'", message);
+	free(message);
+
+	return NULL;
 }
