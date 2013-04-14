@@ -11,9 +11,10 @@
 
 #include <unistd.h>
 
-static int term_fd = 0;
-static int srv_fd;
-static strbuf_t *sbuf;
+typedef struct {
+	char *msg_type;
+	char *(*handler)(cJSON *);
+} cmd_t;
 
 void process_response(char *str);
 void process_input(char *str);
@@ -21,6 +22,21 @@ void process_input(char *str);
 void handle_response(cJSON *json);
 char *handle_cmd();
 char *handle_message();
+
+char *cmd_msg(cJSON *data);
+char *cmd_nick(cJSON *data);
+char *cmd_error(cJSON *data);
+
+static int term_fd = 0;
+static int srv_fd;
+static strbuf_t *sbuf;
+
+static cmd_t cmd_handlers[] = {
+	{ "MSG", cmd_msg },
+	{ "NICK", cmd_nick },
+	{ "ERROR", cmd_error }
+};
+static int ncmds = sizeof(cmd_handlers) / sizeof(cmd_t);
 
 int main(void)
 {
@@ -80,31 +96,57 @@ void process_response(char *str)
 
 void handle_response(cJSON *json)
 {
-	static char result[BUFSIZ];
+	int i;
+	char *result = NULL;
 
-	int len;
 	cJSON *type = cJSON_GetObjectItem(json, "msgType");
 	cJSON *data = cJSON_GetObjectItem(json, "data");
 
-	if (!strcmp(type->valuestring, NICK_STR)) {
-		cJSON *nick = cJSON_GetObjectItem(data, "nick");
-		cJSON *prev = cJSON_GetObjectItem(data, "prev_nick");
-
-		len = snprintf(result, BUFSIZ, "* '%s' is now known as '%s'\n",
-					   prev->valuestring, nick->valuestring);
-	} else if (!strcmp(type->valuestring, MSG_STR)) {
-		cJSON *nick = cJSON_GetObjectItem(data, "nick");
-		cJSON *msg = cJSON_GetObjectItem(data, "message");
-
-		len = snprintf(result, BUFSIZ, "<%s> %s\n",
-					   nick->valuestring, msg->valuestring);
-	} else {
-		result[0] = '\0';
-		len = 0;
+	for (i = 0; i < ncmds; i++) {
+		if (!strcmp(type->valuestring, cmd_handlers[i].msg_type)) {
+			result = cmd_handlers[i].handler(data);
+		}
 	}
 
-	if (len > 0)
-		write(term_fd, result, len);
+	if (result) {
+		write(term_fd, result, strlen(result));
+		free(result);
+	}
+}
+
+char *cmd_msg(cJSON *data)
+{
+	char *result = malloc(BUFSIZ);
+
+	cJSON *nick = cJSON_GetObjectItem(data, "nick");
+	cJSON *msg = cJSON_GetObjectItem(data, "message");
+
+	snprintf(result, BUFSIZ, "<%s> %s\n",
+			 nick->valuestring, msg->valuestring);
+
+	return result;
+}
+
+char *cmd_nick(cJSON *data)
+{
+	char *result = malloc(BUFSIZ);
+
+	cJSON *nick = cJSON_GetObjectItem(data, "nick");
+	cJSON *prev = cJSON_GetObjectItem(data, "prev_nick");
+
+	snprintf(result, BUFSIZ, "* '%s' is now known as '%s'\n",
+			 prev->valuestring, nick->valuestring);
+
+	return result;
+}
+
+char *cmd_error(cJSON *data)
+{
+	char *message = cJSON_PrintUnformatted(data);
+	warning("error: '%s'", message);
+	free(message);
+
+	return NULL;
 }
 
 char *handle_cmd(char *cmd)
