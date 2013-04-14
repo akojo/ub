@@ -20,6 +20,11 @@ int listen_to(int port)
 	int status;
 	struct sockaddr_in addr;
 
+	opt = 1;
+	setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(int));
+	opt = 0;
+	setsockopt(fd, SOL_SOCKET, SO_LINGER, &opt, sizeof(int));
+
 	addr.sin_family = AF_INET;
 	addr.sin_port = htons(port);
 	addr.sin_addr.s_addr = INADDR_ANY;
@@ -30,11 +35,6 @@ int listen_to(int port)
 
 	status = listen(fd, 32);
 	if (status < 0) error("listen to local socket failed");
-
-	opt = 1;
-	setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(int));
-	opt = 0;
-	setsockopt(fd, SOL_SOCKET, SO_LINGER, &opt, sizeof(int));
 
 	return fd;
 }
