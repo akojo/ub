@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <unistd.h>
 
@@ -24,6 +25,8 @@ int listen_to(int port)
 	setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(int));
 	opt = 0;
 	setsockopt(fd, SOL_SOCKET, SO_LINGER, &opt, sizeof(int));
+
+	memset(&addr, 0, sizeof(struct sockaddr_in));
 
 	addr.sin_family = AF_INET;
 	addr.sin_port = htons(port);
