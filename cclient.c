@@ -182,7 +182,7 @@ char *cmd_nick(cJSON *data)
 char *cmd_error(cJSON *data)
 {
 	char *message = cJSON_PrintUnformatted(data);
-	warning("error: '%s'", message);
+	warning("error: '%s'\n", message);
 	free(message);
 
 	return NULL;
