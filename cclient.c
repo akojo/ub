@@ -55,6 +55,10 @@ void process_term_input(char *str)
 {
 	char *response;
 	int len = strlen(str);
+
+	if (*str == '\n')
+		return;
+
 	while (isspace(str[len - 1])) {
 		str[len - 1] = '\0';
 		len--;
