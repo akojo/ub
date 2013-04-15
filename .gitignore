@@ -1,4 +1,5 @@
 *.o
+*~
 cclient
 cserver
-*~
+test/test_array
