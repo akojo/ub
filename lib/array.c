@@ -7,11 +7,11 @@
 
 array_t *array_new()
 {
-	array_t *new = calloc(1, sizeof(array_t));
-	new->size = DEFAULT_SIZE;
-	new->free = 0;
-	new->entries = calloc(new->size, sizeof(void *));
-	return new;
+    array_t *new = calloc(1, sizeof(array_t));
+    new->size = DEFAULT_SIZE;
+    new->free = 0;
+    new->entries = calloc(new->size, sizeof(void *));
+    return new;
 }
 
 void array_delete(array_t *array)
@@ -22,35 +22,35 @@ void array_delete(array_t *array)
 
 void array_ensure(array_t *a, int size)
 {
-	if (a->size < size) {
-		while (a->size < size)
-			a->size *= 2;
-		a->entries = realloc(a->entries, a->size * sizeof(void *));
-		memset(a->entries + a->free, 0, a->size - a->free);
-	}
+    if (a->size < size) {
+        while (a->size < size)
+            a->size *= 2;
+        a->entries = realloc(a->entries, a->size * sizeof(void *));
+        memset(a->entries + a->free, 0, a->size - a->free);
+    }
 }
 
 void *array_get(array_t *a, int index)
 {
-	return a->entries[index];
+    return a->entries[index];
 }
 
 void array_set(array_t *a, int index, void *value)
 {
-	a->entries[index] = value;
-	if (a->free <= index)
-		a->free = index + 1;
+    a->entries[index] = value;
+    if (a->free <= index)
+        a->free = index + 1;
 }
 
 void array_push(array_t *a, void *value)
 {
-	array_ensure(a, a->free + 1);
-	a->entries[a->free++] = value;
+    array_ensure(a, a->free + 1);
+    a->entries[a->free++] = value;
 }
 
 void array_foreach_idx(array_t *a, void (*func)(void *, int, void *), void *ctx)
 {
-	int i;
-	for (i = 0; i < a->free; i++)
-		func(a->entries[i], i, ctx);
+    int i;
+    for (i = 0; i < a->free; i++)
+        func(a->entries[i], i, ctx);
 }

@@ -2,9 +2,9 @@
 #define ARRAY_H
 
 struct array {
-	int size;
-	int free;
-	void **entries;
+    int size;
+    int free;
+    void **entries;
 };
 
 typedef struct array array_t;
